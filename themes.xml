@@ -1,0 +1,55 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+
+    <style name="Theme.UniPool" parent="Theme.MaterialComponents.Light.NoActionBar">
+        <item name="colorPrimary">@color/unipool_blue</item>
+        <item name="colorPrimaryDark">@color/unipool_yellow_dark</item>
+        <item name="colorAccent">@color/unipool_blue</item>
+        <item name="android:statusBarColor">@color/unipool_yellow_dark</item>
+    </style>
+
+    <style name="UniPool.Label" parent="">
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_dark</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_marginBottom">4dp</item>
+        <item name="android:layout_width">wrap_content</item>
+        <item name="android:layout_height">wrap_content</item>
+    </style>
+
+    <style name="UniPool.Input" parent="">
+        <item name="android:background">@drawable/bg_input_field</item>
+        <item name="android:paddingStart">12dp</item>
+        <item name="android:paddingEnd">12dp</item>
+        <item name="android:paddingTop">10dp</item>
+        <item name="android:paddingBottom">10dp</item>
+        <item name="android:textSize">14sp</item>
+        <item name="android:textColor">@color/text_dark</item>
+        <item name="android:textColorHint">@color/text_gray</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">wrap_content</item>
+        <item name="android:layout_marginBottom">12dp</item>
+    </style>
+
+    <style name="UniPool.Button.Primary" parent="">
+        <item name="android:background">@drawable/bg_button_blue</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">48dp</item>
+        <item name="android:gravity">center</item>
+    </style>
+
+    <style name="UniPool.Button.Role" parent="">
+        <item name="android:background">@drawable/bg_button_blue</item>
+        <item name="android:textColor">@color/white</item>
+        <item name="android:textSize">16sp</item>
+        <item name="android:textStyle">bold</item>
+        <item name="android:layout_width">match_parent</item>
+        <item name="android:layout_height">52dp</item>
+        <item name="android:gravity">center</item>
+        <item name="android:layout_marginBottom">12dp</item>
+    </style>
+
+</resources>
