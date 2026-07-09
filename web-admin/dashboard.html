@@ -1,0 +1,183 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>UniPool Admin Dashboard</title>
+    <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+    <style>
+        body { background-color: #f8f9fa; }
+        .sidebar { height: 100vh; background: #343a40; color: white; padding-top: 20px; }
+        .sidebar a { color: #ccc; text-decoration: none; padding: 10px 20px; display: block; }
+        .sidebar a:hover { background: #495057; color: white; }
+        .card { margin-bottom: 20px; }
+    </style>
+</head>
+<body>
+
+<div class="container-fluid">
+    <div class="row">
+        <nav class="col-md-2 sidebar d-none d-md-block">
+            <h4 class="text-center">UniPool Admin</h4>
+            <hr>
+            <a href="#" onclick="showSection('trips')">Trips Management</a>
+            <a href="#" onclick="showSection('users')">User Management</a>
+            <a href="#" onclick="logout()">Logout</a>
+        </nav>
+
+        <main class="col-md-10 ms-sm-auto px-md-4">
+            <div id="trips-section" class="pt-4">
+                <h2>Trips Management</h2>
+                <button class="btn btn-primary mb-3" data-bs-toggle="modal" data-bs-target="#addTripModal">Add New Trip</button>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Destination</th>
+                                    <th>Departure</th>
+                                    <th>Driver</th>
+                                    <th>Passengers</th>
+                                    <th>Status</th>
+                                </tr>
+                            </thead>
+                            <tbody id="trips-table-body">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+
+            <div id="users-section" class="pt-4" style="display:none;">
+                <h2>User Management</h2>
+                <div class="card">
+                    <div class="card-body">
+                        <table class="table table-striped">
+                            <thead>
+                                <tr>
+                                    <th>ID</th>
+                                    <th>Username</th>
+                                    <th>Email</th>
+                                    <th>Role</th>
+                                </tr>
+                            </thead>
+                            <tbody id="users-table-body">
+                                <!-- Data will be loaded here -->
+                            </tbody>
+                        </table>
+                    </div>
+                </div>
+            </div>
+        </main>
+    </div>
+</div>
+
+<!-- Add Trip Modal -->
+<div class="modal fade" id="addTripModal" tabindex="-1">
+    <div class="modal-dialog">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Schedule New Trip</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <form id="addTripForm">
+                    <div class="mb-3">
+                        <label class="form-label">Shuttle ID</label>
+                        <input type="number" class="form-control" id="shuttle_id" value="1" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Destination</label>
+                        <input type="text" class="form-control" id="destination" placeholder="Main Campus" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Departure Time</label>
+                        <input type="datetime-local" class="form-control" id="departure_time" required>
+                    </div>
+                    <div class="mb-3">
+                        <label class="form-label">Arrival Time</label>
+                        <input type="datetime-local" class="form-control" id="arrival_time" required>
+                    </div>
+                    <button type="submit" class="btn btn-success">Save Trip</button>
+                </form>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+<script>
+    const API_BASE = "../api/";
+
+    function showSection(section) {
+        document.getElementById('trips-section').style.display = section === 'trips' ? 'block' : 'none';
+        document.getElementById('users-section').style.display = section === 'users' ? 'block' : 'none';
+        if(section === 'trips') loadTrips();
+        if(section === 'users') loadUsers();
+    }
+
+    async function loadTrips() {
+        const response = await fetch(API_BASE + 'get_trips.php');
+        const trips = await response.json();
+        const tbody = document.getElementById('trips-table-body');
+        tbody.innerHTML = trips.map(t => `
+            <tr>
+                <td>${t.id}</td>
+                <td>${t.destination}</td>
+                <td>${t.departure_time}</td>
+                <td>${t.driver_name}</td>
+                <td>${t.passengers}/${t.capacity}</td>
+                <td><span class="badge bg-success">${t.status}</span></td>
+            </tr>
+        `).join('');
+    }
+
+    async function loadUsers() {
+        const response = await fetch(API_BASE + 'get_users.php');
+        const users = await response.json();
+        const tbody = document.getElementById('users-table-body');
+        tbody.innerHTML = users.map(u => `
+            <tr>
+                <td>${u.UserID}</td>
+                <td>${u.Username}</td>
+                <td>${u.Email}</td>
+                <td>${u.Role}</td>
+            </tr>
+        `).join('');
+    }
+
+    document.getElementById('addTripForm').onsubmit = async (e) => {
+        e.preventDefault();
+        const data = {
+            shuttle_id: document.getElementById('shuttle_id').value,
+            destination: document.getElementById('destination').value,
+            departure_time: document.getElementById('departure_time').value.replace('T', ' ') + ':00',
+            arrival_time: document.getElementById('arrival_time').value.replace('T', ' ') + ':00'
+        };
+
+        const response = await fetch(API_BASE + 'add_trip.php', {
+            method: 'POST',
+            body: JSON.stringify(data)
+        });
+
+        if(response.ok) {
+            alert('Trip added successfully');
+            bootstrap.Modal.getInstance(document.getElementById('addTripModal')).hide();
+            loadTrips();
+        } else {
+            alert('Failed to add trip');
+        }
+    };
+
+    function logout() {
+        window.location.href = 'index.html';
+    }
+
+    // Initial load
+    loadTrips();
+</script>
+
+</body>
+</html>

@@ -4,6 +4,12 @@ import android.content.Intent
 import android.os.Bundle
 import android.widget.*
 import androidx.appcompat.app.AppCompatActivity
+import com.example.unipool.network.LoginRequest
+import com.example.unipool.network.LoginResponse
+import com.example.unipool.network.RetrofitClient
+import retrofit2.Call
+import retrofit2.Callback
+import retrofit2.Response
 
 class LoginActivity : AppCompatActivity() {
 
@@ -31,15 +37,8 @@ class LoginActivity : AppCompatActivity() {
     }
 
     private fun attemptLogin() {
-
-        val username = etUsername.text.toString().trim()
         val email = etEmail.text.toString().trim()
         val password = etPassword.text.toString()
-
-        if (username.isBlank()) {
-            etUsername.error = "Username is required"
-            return
-        }
 
         if (email.isBlank() || !android.util.Patterns.EMAIL_ADDRESS.matcher(email).matches()) {
             etEmail.error = "Enter a valid email"
@@ -51,59 +50,43 @@ class LoginActivity : AppCompatActivity() {
             return
         }
 
-        val role = detectRole(username, email)
+        val request = LoginRequest(email, password)
+        
+        RetrofitClient.instance.login(request).enqueue(object : Callback<LoginResponse> {
+            override fun onResponse(call: Call<LoginResponse>, response: Response<LoginResponse>) {
+                if (response.isSuccessful) {
+                    val user = response.body()?.user
+                    if (user != null) {
+                        Toast.makeText(this@LoginActivity, "Logged in as ${user.role}", Toast.LENGTH_SHORT).show()
+                        navigateToDashboard(user.role)
+                    }
+                } else {
+                    val errorBody = response.errorBody()?.string()
+                    val message = try {
+                        com.google.gson.JsonParser.parseString(errorBody).asJsonObject.get("message").asString
+                    } catch (e: Exception) {
+                        "Invalid credentials"
+                    }
+                    Toast.makeText(this@LoginActivity, "Login failed: $message", Toast.LENGTH_LONG).show()
+                }
+            }
 
-        // 👇 FIX: Check for failure first and exit early if it's invalid
-        if (role == "Unknown") {
-            Toast.makeText(this, "Invalid username or email.", Toast.LENGTH_SHORT).show()
-            return // Stop right here, don't run anything below!
-        }
+            override fun onFailure(call: Call<LoginResponse>, t: Throwable) {
+                Toast.makeText(this@LoginActivity, "Network Error: ${t.message}", Toast.LENGTH_LONG).show()
+                android.util.Log.e("LoginActivity", "Error: ", t)
+            }
+        })
+    }
 
-        // 👇 Now this will ONLY run if a real, valid role was found
-        Toast.makeText(this, "Logged in as $role", Toast.LENGTH_SHORT).show()
-
+    private fun navigateToDashboard(role: String) {
         when (role) {
             "Driver" -> {
                 startActivity(Intent(this, DriverHomeActivity::class.java))
                 finish()
             }
-
-            "Student" -> {
-                // TODO: Student Dashboard
-                Toast.makeText(this, "Student Dashboard Coming Soon", Toast.LENGTH_SHORT).show()
+            "Student", "Staff", "Admin" -> {
+                Toast.makeText(this, "$role Dashboard Coming Soon", Toast.LENGTH_SHORT).show()
             }
-
-            "Staff" -> {
-                // TODO: Staff Dashboard
-                Toast.makeText(this, "Staff Dashboard Coming Soon", Toast.LENGTH_SHORT).show()
-            }
-
-            "Admin" -> {
-                // TODO: Admin Dashboard
-                Toast.makeText(this, "Admin Dashboard Coming Soon", Toast.LENGTH_SHORT).show()
-            }
-        }
-    }
-
-
-
-    private fun detectRole(username: String, email: String): String {
-
-        return when {
-
-            username.startsWith("STU", true) &&
-                    email.endsWith("@live.mcl.edu.ph", true) -> "Student"
-
-            username.startsWith("STA", true) &&
-                    email.endsWith("@mcl.edu.ph", true) -> "Staff"
-
-            username.startsWith("DRI", true) &&
-                    email.endsWith("@gmail.com", true) -> "Driver"
-
-            username.startsWith("ADM", true) &&
-                    email.endsWith("@gmail.com", true) -> "Admin"
-
-            else -> "Unknown"
         }
     }
 }
